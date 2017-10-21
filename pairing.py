@@ -17,6 +17,7 @@
 import sys
 from random import choice
 from collections import defaultdict
+import ast
 
 devs = ['Luc','Gilles','Bert','William','Johan','Wouter','Michel']
 pairs = []
@@ -68,34 +69,77 @@ def form_pairs():
     # solution: just random() over partners with lowest cumul
     history = fetch_history()
 
-    # TODO first takes leads into account
+    create_pairs_with_leads(history)
     
-    # TODO remove
-    for key in history:
-        print("{}:{}".format(key, history[key]))
-    
+    create_pairs_without_leads(history)
+
+def create_pairs_with_leads(history):
+    while len(leads) > 0:
+        lead = pop_random(leads)
+        other = pop_random_least_paired_with(lead, history)
+        pairs.append(create_pair(lead, other))
+
+def create_pairs_without_leads(history):
     while len(devs) > 0:
-	    one = select_random(devs)
-	    if len(devs) is 0:
+	    one = pop_random(devs)
+	    if len(devs) is 0: # last remaining dev
 		    pairs.append((one))
 	    else:
-		    two = select_random(devs)
-		    pairs.append((one,two))
+		    two = pop_random_least_paired_with(one, history)
+		    pairs.append(create_pair(one,two))
     
+def pop_random_least_paired_with(dev, history):
+    pairs_with_dev = [pair for pair in history if dev in pair]
+
+    # remove solos and pairs in which the partner is not in devs
+    for pair in [p for p in pairs_with_dev]:
+        #TODO HOW TAKE INTO ACCOUNT SOLO HISTORY?
+        if len(pair) == 1:
+            pairs_with_dev.remove(pair)
+        else:
+            other_d = get_other(pair, dev)
+            if other_d not in devs:
+                pairs_with_dev.remove(pair)
+
+    minimum = 999999
+    minimum_pairs = []
+    for pair in pairs_with_dev:
+        if history[pair] < minimum:
+            minimum = history[pair]
+            minimum_pairs = [pair]
+        elif history[pair] == minimum:
+            minimum_pairs.append(pair)
+        else:
+            pass
+
+    chosen_pair = choice(minimum_pairs)
+    other_dev = get_other(chosen_pair, dev)
+    devs.remove(other_dev)
+    return other_dev
+
+def get_other(pair, dev):
+    if dev == pair[0]:
+        return pair[1]
+    else:
+        return pair[0]    
 
 def fetch_history():
-    #try:
-    #    return read_history()
-    #except FileNotFoundError:
-    return create_zero_history()
+    try:
+        return read_history()
+    except FileNotFoundError:
+        return create_zero_history()
+
+global PAIR_CUMUL_SIGN
+PAIR_CUMUL_SIGN = " - "
 
 def read_history():
     pair_histories = {}
     reader = open("history.list","r")
     history = reader.read()
     for pair_history in history.split("\n"):
-        pair_cumul = pair_history.split(" ")
-        pair_histories.append(pair_cumul[0], pair_cumul[1])
+        if pair_history != "":
+            pair_cumul = pair_history.split(PAIR_CUMUL_SIGN)
+            pair_histories[ast.literal_eval(pair_cumul[0])] = int(pair_cumul[1])
 
     return pair_histories
 
@@ -106,6 +150,11 @@ def create_zero_history():
             pair = create_pair(devs[i], devs[j])
             pair_histories[pair] = 0
         pair_histories[tuple([dev_i])] = 0
+
+    writer = open("history.list", "w")
+    for pair in pair_histories:
+        writer.write("{}{}{}\n".format(pair, PAIR_CUMUL_SIGN, pair_histories[pair]))
+    writer.close()
     
     return pair_histories
 
@@ -124,11 +173,12 @@ def pair_str_repr(pair):
 def print_help():
     print("TODO: print help instructions")
 
-def select_random(remaining):
-	return remaining.pop(remaining.index(choice(remaining)))
+def pop_random(people):
+	return people.pop(people.index(choice(people)))
 
 if __name__ == '__main__':
     process_args(sys.argv)
     
+    #TODO ask if pairs alright, then save
     for pair in pairs:
         print(pair_str_repr(pair))
