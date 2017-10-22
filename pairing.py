@@ -1,18 +1,18 @@
 #!/bin/env python3
 
-#TODO
-#
-# don't use lib to parse cli arguments
+# No libs used to parse cli arguments
 # options:
 #	-absent [...]
 #	-alone [...]
 #	-staying [...:...]
-#   -lead [...] TODO two leads cannot go together
+#   -lead [...] 
 #	-help
-#	-save [...:... || ...] TODO: ask if output good, if yes, save.
+#	-save [...:... || ...] TODO
+# Ask if output good, if yes, save.
 # 21 possible unique pairs for 7 people + 7 for being alone
 # string representation pair sorted alphabetically: Wouter-Gilles -> Gilles-Wouter
 # save chosen pairs: add +1 for each pair or alone
+# TODO Not same pairs as yesterday
 
 import sys
 from random import choice
@@ -65,8 +65,6 @@ def group_values_with_their_options(args):
     return options_with_values
 
 def form_pairs():
-    # TODO take history (cumul) into account
-    # solution: just random() over partners with lowest cumul
     history = fetch_history()
 
     create_pairs_with_leads(history)
@@ -151,12 +149,15 @@ def create_zero_history():
             pair_histories[pair] = 0
         pair_histories[tuple([dev_i])] = 0
 
+    _store_pair_histories(pair_histories)
+    
+    return pair_histories
+
+def _store_pair_histories(pair_histories):
     writer = open("history.list", "w")
     for pair in pair_histories:
         writer.write("{}{}{}\n".format(pair, PAIR_CUMUL_SIGN, pair_histories[pair]))
     writer.close()
-    
-    return pair_histories
 
 def parse_pair(pair_str):
     return tuple(sorted(pair_str.split(":")))
@@ -176,9 +177,36 @@ def print_help():
 def pop_random(people):
 	return people.pop(people.index(choice(people)))
 
-if __name__ == '__main__':
-    process_args(sys.argv)
-    
-    #TODO ask if pairs alright, then save
+def increment_cumul_chosen_pairs_in_history(pairs):
+    history = fetch_history()
     for pair in pairs:
-        print(pair_str_repr(pair))
+        history[pair] = history[pair] + 1
+
+    _store_pair_histories(history)
+
+AFFIRMATIONS = ('y','yes')
+NEGATIONS = ('n','no')
+ACCEPTABLE_RESPONSES = AFFIRMATIONS + NEGATIONS 
+
+if __name__ == '__main__':
+    good_pairing_found = False
+    while not good_pairing_found:
+        devs = ['Luc','Gilles','Bert','William','Johan','Wouter','Michel']
+        pairs = []
+        leads = []
+        process_args(sys.argv)
+    
+        print("\n")
+        for pair in pairs:
+            print(pair_str_repr(pair))
+
+        response = input("Is this pairing good? [Y/N]: ")
+        while response.lower() not in ACCEPTABLE_RESPONSES:            
+            response = input("Is this pairing good? Please answer 'y[es]' or 'n[o]': ")
+        good_pairing_found = True if response in AFFIRMATIONS else False
+
+    increment_cumul_chosen_pairs_in_history(pairs)
+    
+    
+
+    
