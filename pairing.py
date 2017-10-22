@@ -30,11 +30,11 @@ def process_args(args):
         print_help()
 
     if "-absent" in options_with_values:
-        for dev in options_with_values["-absent"]:        
-            devs.remove(dev)        
+        for dev in options_with_values["-absent"]:
+            devs.remove(dev)
 
     if "-alone" in options_with_values:
-        for dev in options_with_values["-alone"]:        
+        for dev in options_with_values["-alone"]:
             pairs.append(tuple([dev]))
             devs.remove(dev)
 
@@ -42,11 +42,11 @@ def process_args(args):
         for dev in options_with_values["-lead"]:
             leads.append(dev)
             devs.remove(dev)
-            
+
     if "-staying" in options_with_values:
         for pair_str in options_with_values["-staying"]:
-            pair = parse_pair(pair_str)            
-            pairs.extend(pair)        
+            pair = parse_pair(pair_str)
+            pairs.append(pair)
             for dev in pair:
                 devs.remove(dev)
 
@@ -65,12 +65,12 @@ def group_values_with_their_options(args):
     return options_with_values
 
 def form_pairs():
-    # TODO take history (cumul) into account 
+    # TODO take history (cumul) into account
     # solution: just random() over partners with lowest cumul
     history = fetch_history()
 
     create_pairs_with_leads(history)
-    
+
     create_pairs_without_leads(history)
 
 def create_pairs_with_leads(history):
@@ -87,7 +87,7 @@ def create_pairs_without_leads(history):
 	    else:
 		    two = pop_random_least_paired_with(one, history)
 		    pairs.append(create_pair(one,two))
-    
+
 def pop_random_least_paired_with(dev, history):
     pairs_with_dev = [pair for pair in history if dev in pair]
 
