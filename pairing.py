@@ -5,7 +5,7 @@
 #	-absent [...]
 #	-alone [...]
 #	-staying [...:...]
-#   -lead [...] 
+#   -lead [...]
 #	-help
 #	-save [...:... || ...] TODO
 # Ask if output good, if yes, save.
@@ -13,6 +13,7 @@
 # string representation pair sorted alphabetically: Wouter-Gilles -> Gilles-Wouter
 # save chosen pairs: add +1 for each pair or alone
 # TODO Not same pairs as yesterday
+# TODO pass devs, pairs, leads as arguments
 
 import sys
 from random import choice
@@ -23,11 +24,17 @@ devs = ['Luc','Gilles','Bert','William','Johan','Wouter','Michel']
 pairs = []
 leads = []
 
-def process_args(args):
-    options_with_values = group_values_with_their_options(args)
+PAIR_CUMUL_SIGN = " - "
+AFFIRMATIONS = ('y','yes')
+NEGATIONS = ('n','no')
+ACCEPTABLE_RESPONSES = AFFIRMATIONS + NEGATIONS
+
+def _process_args(args):
+    options_with_values = _group_values_with_their_options(args)
 
     if "-help" in options_with_values:
-        print_help()
+        _print_help()
+        sys.exit(2)
 
     if "-absent" in options_with_values:
         for dev in options_with_values["-absent"]:
@@ -45,60 +52,68 @@ def process_args(args):
 
     if "-staying" in options_with_values:
         for pair_str in options_with_values["-staying"]:
-            pair = parse_pair(pair_str)
+            pair = _parse_pair(pair_str)
             pairs.append(pair)
             for dev in pair:
                 devs.remove(dev)
 
-    form_pairs()
+    _form_pairs()
 
-def group_values_with_their_options(args):
-    options_with_values = defaultdict(list)
-
+def _group_values_with_their_options(args):
+    options_with_values = {}
     option = None
     for arg in args:
         if arg.startswith('-'):
             option = arg
+            options_with_values[option] = []
         else:
             options_with_values[option].append(arg)
 
     return options_with_values
 
-def form_pairs():
-    history = fetch_history()
+def _form_pairs():
+    history = _fetch_history()
 
-    create_pairs_with_leads(history)
+    _create_pairs_with_leads(history)
 
-    create_pairs_without_leads(history)
+    _create_pairs_without_leads(history)
 
-def create_pairs_with_leads(history):
+def _create_pairs_with_leads(history):
     while len(leads) > 0:
-        lead = pop_random(leads)
-        other = pop_random_least_paired_with(lead, history)
-        pairs.append(create_pair(lead, other))
+        lead = _pop_random(leads)
+        other = _pop_random_least_paired_with(lead, history)
+        pairs.append(_create_pair(lead, other))
 
-def create_pairs_without_leads(history):
+def _create_pairs_without_leads(history):
     while len(devs) > 0:
-	    one = pop_random(devs)
+	    one = _pop_random(devs)
 	    if len(devs) is 0: # last remaining dev
 		    pairs.append((one))
 	    else:
-		    two = pop_random_least_paired_with(one, history)
-		    pairs.append(create_pair(one,two))
+		    two = _pop_random_least_paired_with(one, history)
+		    pairs.append(_create_pair(one,two))
 
-def pop_random_least_paired_with(dev, history):
-    pairs_with_dev = [pair for pair in history if dev in pair]
+def _pop_random_least_paired_with(dev, history):
+    pairs_with_dev = _get_pairs_with_dev_and_unchosen_partner(dev, history)
 
-    # remove solos and pairs in which the partner is not in devs
-    for pair in [p for p in pairs_with_dev]:
-        #TODO HOW TAKE INTO ACCOUNT SOLO HISTORY?
-        if len(pair) == 1:
-            pairs_with_dev.remove(pair)
-        else:
-            other_d = get_other(pair, dev)
-            if other_d not in devs:
-                pairs_with_dev.remove(pair)
+    minimum_pairs = _find_minimum_pairs(history, pairs_with_dev)
 
+    chosen_pair = choice(minimum_pairs)
+    other_dev = _get_other(chosen_pair, dev)
+    devs.remove(other_dev)
+    return other_dev
+
+def _get_pairs_with_dev_and_unchosen_partner(dev, history):
+    pairs_with_dev = []
+    for pair in history:
+        if len(pair) > 1 and dev in pair:
+            other_dev = _get_other(pair, dev)
+            if other_dev in devs:
+                pairs_with_dev.append(pair)
+
+    return pairs_with_dev
+
+def _find_minimum_pairs(history, pairs_with_dev):
     minimum = 999999
     minimum_pairs = []
     for pair in pairs_with_dev:
@@ -109,28 +124,21 @@ def pop_random_least_paired_with(dev, history):
             minimum_pairs.append(pair)
         else:
             pass
+    return minimum_pairs
 
-    chosen_pair = choice(minimum_pairs)
-    other_dev = get_other(chosen_pair, dev)
-    devs.remove(other_dev)
-    return other_dev
-
-def get_other(pair, dev):
+def _get_other(pair, dev):
     if dev == pair[0]:
         return pair[1]
     else:
-        return pair[0]    
+        return pair[0]
 
-def fetch_history():
+def _fetch_history():
     try:
-        return read_history()
+        return _read_history()
     except FileNotFoundError:
-        return create_zero_history()
+        return _create_zero_history
 
-global PAIR_CUMUL_SIGN
-PAIR_CUMUL_SIGN = " - "
-
-def read_history():
+def _read_history():
     pair_histories = {}
     reader = open("history.list","r")
     history = reader.read()
@@ -141,16 +149,15 @@ def read_history():
 
     return pair_histories
 
-def create_zero_history():
+def _create_zero_history():
     pair_histories = {}
     for i, dev_i in enumerate(devs):
         for j in range(i+1,  len(devs)):
-            pair = create_pair(devs[i], devs[j])
+            pair = _create_pair(devs[i], devs[j])
             pair_histories[pair] = 0
         pair_histories[tuple([dev_i])] = 0
 
     _store_pair_histories(pair_histories)
-    
     return pair_histories
 
 def _store_pair_histories(pair_histories):
@@ -159,54 +166,58 @@ def _store_pair_histories(pair_histories):
         writer.write("{}{}{}\n".format(pair, PAIR_CUMUL_SIGN, pair_histories[pair]))
     writer.close()
 
-def parse_pair(pair_str):
+def _parse_pair(pair_str):
     return tuple(sorted(pair_str.split(":")))
 
-def create_pair(dev_1, dev_2):
+def _create_pair(dev_1, dev_2):
     return tuple(sorted([dev_1, dev_2]))
 
-def pair_str_repr(pair):
+def _pair_str_repr(pair):
     if type(pair) == str:
         return pair
     else:
         return "{}:{}".format(pair[0],pair[1])
 
-def print_help():
-    print("TODO: print help instructions")
+def _print_help():
+    help_str = """
+    options:
+        -absent [...]
+        -alone [...]
+        -staying [...:...]
+        -lead [...]
+        -help
 
-def pop_random(people):
+    Example:
+        $ ./pairing.py -absent Wouter -lead Bert Michel -staying Gilles:Luc
+    """
+    print(help_str)
+
+def _pop_random(people):
 	return people.pop(people.index(choice(people)))
 
-def increment_cumul_chosen_pairs_in_history(pairs):
-    history = fetch_history()
+def _increment_cumul_chosen_pairs_in_history(pairs):
+    history = _fetch_history()
     for pair in pairs:
         history[pair] = history[pair] + 1
 
     _store_pair_histories(history)
 
-AFFIRMATIONS = ('y','yes')
-NEGATIONS = ('n','no')
-ACCEPTABLE_RESPONSES = AFFIRMATIONS + NEGATIONS 
-
 if __name__ == '__main__':
     good_pairing_found = False
+    args = sys.argv[1:]
     while not good_pairing_found:
         devs = ['Luc','Gilles','Bert','William','Johan','Wouter','Michel']
         pairs = []
         leads = []
-        process_args(sys.argv)
-    
-        print("\n")
+        _process_args(args)
+
+        print("")
         for pair in pairs:
-            print(pair_str_repr(pair))
+            print(_pair_str_repr(pair))
 
         response = input("Is this pairing good? [Y/N]: ")
-        while response.lower() not in ACCEPTABLE_RESPONSES:            
+        while response.lower() not in ACCEPTABLE_RESPONSES:
             response = input("Is this pairing good? Please answer 'y[es]' or 'n[o]': ")
         good_pairing_found = True if response in AFFIRMATIONS else False
 
-    increment_cumul_chosen_pairs_in_history(pairs)
-    
-    
-
-    
+    _increment_cumul_chosen_pairs_in_history(pairs)
