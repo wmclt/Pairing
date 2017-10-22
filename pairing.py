@@ -180,14 +180,17 @@ def _pair_str_repr(pair):
 
 def _print_help():
     help_str = """
-    options:
+    COMMAND:
+        ./pairing.py
+
+    OPTIONS:
         -absent [...]
         -alone [...]
         -staying [...:...]
         -lead [...]
         -help
 
-    Example:
+    EXAMPLE:
         $ ./pairing.py -absent Wouter -lead Bert Michel -staying Gilles:Luc
     """
     print(help_str)
