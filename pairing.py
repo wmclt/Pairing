@@ -7,15 +7,15 @@
 #	-staying [...:...]
 #   -lead [...]
 #	-help
-#	-save [...:... || ...] TODO
+#   -history TODO? return history.list but sorted with highest cumul on top
+#	-save [...:... || ...] TODO => just change history.list manually.
 # Ask if output good, if yes, save.
 # 21 possible unique pairs for 7 people + 7 for being alone
 # string representation pair sorted alphabetically: 
 #       Wouter-Gilles -> Gilles-Wouter
 # save chosen pairs: add +1 for each pair or alone
-# TODO Not same pairs as yesterday
-# TODO pass devs, pairs, leads as arguments
-# TODO if uneven, first deal with solo guy, then pairs
+# TODO Not same pairs as yesterday => meantime, just say "no"
+# If uneven, first deal with solo guy, then pairs
 # TODO maybe notify if some pair/solo has been doing much more than the rest
 
 import sys
@@ -93,6 +93,7 @@ def _group_values_with_their_options(args):
     return options_with_values
 
 def _form_pairs(devs, pairs, leads):
+    # TODO shouldn't need pairs.
     history = _fetch_history()
 
     _create_pairs_with_leads(devs, pairs, leads, history)
