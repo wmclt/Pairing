@@ -1,4 +1,4 @@
-#!/bin/env python3
+#!/usr/bin/env python3
 
 # No libs used to parse cli arguments
 # options:
@@ -94,7 +94,7 @@ def _group_values_with_their_options(args):
 
 def _form_pairs(devs, pairs, leads):
     # TODO shouldn't need pairs.
-    history = _fetch_history()
+    history = _fetch_history(devs)
 
     _create_pairs_with_leads(devs, pairs, leads, history)
 
@@ -183,11 +183,11 @@ def _get_other(pair, dev):
     else:
         return pair[0]
 
-def _fetch_history():
+def _fetch_history(devs = None):
     try:
         return _read_history()
     except FileNotFoundError:
-        return _create_zero_history
+        return _create_zero_history(devs)
 
 def _read_history():
     pair_histories = {}
@@ -200,7 +200,7 @@ def _read_history():
 
     return pair_histories
 
-def _create_zero_history():
+def _create_zero_history(devs):
     pair_histories = {}
     for i, dev_i in enumerate(devs):
         for j in range(i+1,  len(devs)):
