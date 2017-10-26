@@ -28,6 +28,7 @@ PAIR_SPLIT_SIGN = ":"
 AFFIRMATIONS = ('y','yes')
 NEGATIONS = ('n','no')
 ACCEPTABLE_RESPONSES = AFFIRMATIONS + NEGATIONS
+ALL_DEVS = ['Luc','Gilles','Bert','William','Johan','Wouter','Michel']
 
 def main():
     good_pairing_found = False
@@ -47,7 +48,7 @@ def main():
     _increment_cumul_chosen_pairs_in_history(pairs)
 
 def _create_pairing(args):
-    devs = ['Luc','Gilles','Bert','William','Johan','Wouter','Michel']
+    devs = [dev for dev in ALL_DEVS]
     leads, pairs = [], []
     options_with_values = _group_values_with_their_options(args)
 
@@ -94,7 +95,7 @@ def _group_values_with_their_options(args):
 
 def _form_pairs(devs, pairs, leads):
     # TODO shouldn't need pairs.
-    history = _fetch_history(devs)
+    history = _fetch_history()
 
     _create_pairs_with_leads(devs, pairs, leads, history)
 
@@ -183,11 +184,11 @@ def _get_other(pair, dev):
     else:
         return pair[0]
 
-def _fetch_history(devs = None):
+def _fetch_history():
     try:
         return _read_history()
     except FileNotFoundError:
-        return _create_zero_history(devs)
+        return _create_zero_history()
 
 def _read_history():
     pair_histories = {}
@@ -200,11 +201,11 @@ def _read_history():
 
     return pair_histories
 
-def _create_zero_history(devs):
+def _create_zero_history():
     pair_histories = {}
-    for i, dev_i in enumerate(devs):
-        for j in range(i+1,  len(devs)):
-            pair = _create_pair(devs[i], devs[j])
+    for i, dev_i in enumerate(ALL_DEVS):
+        for j in range(i+1,  len(ALL_DEVS)):
+            pair = _create_pair(ALL_DEVS[i], ALL_DEVS[j])
             pair_histories[pair] = 0
         pair_histories[tuple([dev_i])] = 0
 
