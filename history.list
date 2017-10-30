@@ -1,0 +1,28 @@
+('Johan', 'Wouter') - 1
+('Gilles', 'Wouter') - 0
+('Johan', 'Luc') - 0
+('Luc', 'William') - 0
+('Gilles', 'Luc') - 0
+('Bert', 'Michel') - 0
+('Wouter',) - 0
+('Gilles', 'Johan') - 0
+('William', 'Wouter') - 0
+('Johan', 'William') - 0
+('Bert', 'Johan') - 0
+('Gilles',) - 0
+('Michel', 'Wouter') - 0
+('Luc', 'Wouter') - 0
+('Gilles', 'William') - 1
+('Bert', 'William') - 0
+('William',) - 0
+('Bert', 'Luc') - 1
+('Bert', 'Gilles') - 0
+('Luc', 'Michel') - 0
+('Johan', 'Michel') - 0
+('Gilles', 'Michel') - 0
+('Michel', 'William') - 0
+('Bert',) - 0
+('Luc',) - 0
+('Johan',) - 0
+('Bert', 'Wouter') - 0
+('Michel',) - 1
