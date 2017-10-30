@@ -17,6 +17,7 @@
 # TODO Not same pairs as yesterday => meantime, just say "no"
 # If uneven, first deal with solo guy, then pairs
 # TODO maybe notify if some pair/solo has been doing much more than the rest
+# TODO history.list should be alphabetical
 
 import sys
 from random import choice
