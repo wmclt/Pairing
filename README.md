@@ -6,3 +6,6 @@ into account:
 * leads working on stories 
 
 The algorithm strives to make everyone pair with everyone else as equally as possible.
+
+TODO
+* Sort pairs alphabetically

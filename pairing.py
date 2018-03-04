@@ -20,11 +20,9 @@
 # TODO history.list should be alphabetical
 
 import sys
-import history_io
+import history_io, bash_io
 from random import choice
-from collections import defaultdict
 
-PAIR_SPLIT_SIGN = ":"
 AFFIRMATIONS = ('y','yes')
 NEGATIONS = ('n','no')
 ACCEPTABLE_RESPONSES = AFFIRMATIONS + NEGATIONS
@@ -33,12 +31,11 @@ ALL_DEVS = ['Luc','Gilles','Bert','William','Johan','Wouter','Michel']
 def main():
     good_pairing_found = False
     args = sys.argv[1:]
+
     while not good_pairing_found:
         pairs = _create_pairing(args)
 
-        print("")
-        for pair in pairs:
-            print(_pair_str_repr(pair))
+        bash_io.pretty_print(pairs)
 
         response = input("Is this pairing good? [Y/N]: ")
         while response.lower() not in ACCEPTABLE_RESPONSES:
@@ -48,54 +45,14 @@ def main():
     history_io.increment_cumul_chosen_pairs(pairs)
 
 def _create_pairing(args):
-    devs = [dev for dev in ALL_DEVS]
-    leads, pairs = [], []
-    options_with_values = _group_values_with_their_options(args)
-
-    if "-h" in options_with_values:
-        print_help()
-        sys.exit(2)
-
-    if "-a" in options_with_values:
-        for dev in options_with_values["-a"]:
-            devs.remove(dev)
-
-    if "-s" in options_with_values:
-        for dev in options_with_values["-s"]:
-            pairs.append(tuple([dev]))
-            devs.remove(dev)
-
-    if "-l" in options_with_values:
-        for dev in options_with_values["-l"]:
-            leads.append(dev)
-            devs.remove(dev)
-
-    if "-r" in options_with_values:
-        for pair_str in options_with_values["-r"]:
-            pair = _parse_pair(pair_str)
-            pairs.append(pair)
-            for dev in pair:
-                devs.remove(dev)
+    devs, pairs, leads = bash_io.read_args([dev for dev in ALL_DEVS], args)
 
     _form_pairs(devs, pairs, leads)
     
     return pairs
 
-def _group_values_with_their_options(args):
-    options_with_values = defaultdict(list)
-    option = None
-    for arg in args:
-        if arg.startswith('--'):
-            option = arg[1:3]
-        if arg.startswith('-'):
-            option = arg
-        else:
-            options_with_values[option].append(arg)
-
-    return options_with_values
-
 def _form_pairs(devs, pairs, leads):
-    # TODO shouldn't need pairs.
+    """TODO shouldn't need pairs."""
     history = history_io.fetch_history()
 
     _create_pairs_with_leads(devs, pairs, leads, history)
@@ -104,15 +61,6 @@ def _form_pairs(devs, pairs, leads):
 
 def _create_pair(dev_1, dev_2):
     return tuple(sorted([dev_1, dev_2]))
-
-def _parse_pair(pair_str):
-    return tuple(sorted(pair_str.split(PAIR_SPLIT_SIGN)))
-    
-def _pair_str_repr(pair):
-    if len(pair) == 1:
-        return pair[0]
-    else:
-        return "{}{}{}".format(pair[0], PAIR_SPLIT_SIGN, pair[1])
 
 def _create_pairs_with_leads(devs, pairs, leads, history):
     while len(leads) > 0:
@@ -196,23 +144,6 @@ def _get_other(pair, dev):
         return pair[1]
     else:
         return pair[0]
-
-def print_help():
-    help_str = """
-    COMMAND:
-        ./pairing.py
-
-    OPTIONS:
-        -a|-absent [...]
-        -s|--solo [...]
-        -r|--remaining [...:...]
-        -l|--lead [...]
-        --help
-
-    EXAMPLE:
-        $ ./pairing.py --absent Wouter --lead Bert Michel --remaining Gilles:Luc
-    """
-    print(help_str)
 
 if __name__ == '__main__':
     main()
