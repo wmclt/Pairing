@@ -1,8 +1,9 @@
 from collections import defaultdict
 
-PAIR_SPLIT_SIGN = ":"
+from config import PAIR_SPLIT_SIGN
 
-def read_args(devs, args):
+
+def read_args(devs: list, args: list):
     pairs, leads = [], []
     options_with_values = _group_values_with_their_options(args)
 
@@ -33,13 +34,14 @@ def read_args(devs, args):
 
     return devs, pairs, leads
 
+
 def _group_values_with_their_options(args):
     options_with_values = defaultdict(list)
     option = None
     for arg in args:
         if arg.startswith('--'):
             option = arg[1:3]
-        if arg.startswith('-'):
+        elif arg.startswith('-'):
             option = arg
         else:
             options_with_values[option].append(arg)
@@ -50,9 +52,10 @@ def _group_values_with_their_options(args):
 def _parse_pair(pair_str):
     return tuple(sorted(pair_str.split(PAIR_SPLIT_SIGN)))
 
-def pretty_print(pairs):
+
+def pretty_print(pairs: list) -> None:
     print("")
-    for pair in pairs:
+    for pair in sorted(pairs):
         print(_pair_str_repr(pair))
 
 
@@ -62,7 +65,8 @@ def _pair_str_repr(pair):
     else:
         return "{}{}{}".format(pair[0], PAIR_SPLIT_SIGN, pair[1])
 
-def print_help():
+
+def print_help() -> None:
     help_str = """
     COMMAND:
         ./pairing.py

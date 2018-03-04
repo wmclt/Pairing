@@ -1,3 +1,5 @@
+# Pairing
+
 This application is to quickly create pairs in the team, taking 
 into account:
 * absent devs
@@ -7,5 +9,13 @@ into account:
 
 The algorithm strives to make everyone pair with everyone else as equally as possible.
 
-TODO
-* Sort pairs alphabetically
+
+# TODO
+
+* Document public functions
+	* pairing
+	* bash_io
+	* history_io
+* Not same pairs as yesterday => meantime, just say "no"
+* maybe notify if some pair/solo has been doing much more than the rest
+* In an ideal world, mathchmaker.form_pairs() would work functionally. But for this the whole stack would need to work functionally too.

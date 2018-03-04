@@ -1,3 +1,5 @@
 Pipfile
 Pipfile.lock
 history.list
+.idea/
+__pycache__/
