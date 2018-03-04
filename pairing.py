@@ -2,18 +2,18 @@
 
 # No libs used to parse cli arguments
 # options:
-#	-absent [...]
-#	-alone [...]
-#	-staying [...:...]
-#   -lead [...]
-#	-help
-#   -history TODO? return history.list but sorted with highest cumul on top
-#	-save [...:... || ...] TODO => just change history.list manually.
+#	-a|--absent [...]
+#	-s|--solo [...]
+#	-r|--remaining [...:...]
+#   -l|--lead [...]
+#	-h|--help
+#   --history TODO? return history.list but sorted with highest cumul on top
+#	--save [...:... || ...] TODO => just change history.list manually.
 # Ask if output good, if yes, save.
-# 21 possible unique pairs for 7 people + 7 for being alone
+# 21 possible unique pairs for 7 people + 7 for being solo
 # string representation pair sorted alphabetically: 
 #       Wouter-Gilles -> Gilles-Wouter
-# save chosen pairs: add +1 for each pair or alone
+# save chosen pairs: add +1 for each pair or solo
 # TODO Not same pairs as yesterday => meantime, just say "no"
 # If uneven, first deal with solo guy, then pairs
 # TODO maybe notify if some pair/solo has been doing much more than the rest
@@ -53,26 +53,26 @@ def _create_pairing(args):
     leads, pairs = [], []
     options_with_values = _group_values_with_their_options(args)
 
-    if "-help" in options_with_values:
+    if "-h" in options_with_values:
         print_help()
         sys.exit(2)
 
-    if "-absent" in options_with_values:
-        for dev in options_with_values["-absent"]:
+    if "-a" in options_with_values:
+        for dev in options_with_values["-a"]:
             devs.remove(dev)
 
-    if "-alone" in options_with_values:
-        for dev in options_with_values["-alone"]:
+    if "-s" in options_with_values:
+        for dev in options_with_values["-s"]:
             pairs.append(tuple([dev]))
             devs.remove(dev)
 
-    if "-lead" in options_with_values:
-        for dev in options_with_values["-lead"]:
+    if "-l" in options_with_values:
+        for dev in options_with_values["-l"]:
             leads.append(dev)
             devs.remove(dev)
 
-    if "-staying" in options_with_values:
-        for pair_str in options_with_values["-staying"]:
+    if "-r" in options_with_values:
+        for pair_str in options_with_values["-r"]:
             pair = _parse_pair(pair_str)
             pairs.append(pair)
             for dev in pair:
@@ -83,12 +83,13 @@ def _create_pairing(args):
     return pairs
 
 def _group_values_with_their_options(args):
-    options_with_values = {}
+    options_with_values = defaultdict(list)
     option = None
     for arg in args:
+        if arg.startswith('--'):
+            option = arg[1:3]
         if arg.startswith('-'):
             option = arg
-            options_with_values[option] = []
         else:
             options_with_values[option].append(arg)
 
@@ -110,7 +111,7 @@ def _create_pairs_with_leads(devs, pairs, leads, history):
 
 def _create_pairs_without_leads(devs, pairs, history):
     if len(devs)%2 == 1:
-        dev = _pop_random_least_alone(devs, history)        
+        dev = _pop_random_least_solo(devs, history)        
         pairs.append((dev,))
 
     while len(devs) > 0:
@@ -118,7 +119,7 @@ def _create_pairs_without_leads(devs, pairs, history):
 	    two = _pop_random_least_paired_with(one, devs, history)
 	    pairs.append(_create_pair(one,two))
 
-def _pop_random_least_alone(devs, history):
+def _pop_random_least_solo(devs, history):
     solo_cumuls = []
     for dev in devs:
         solo_cumuls.append(_get_solo_history(dev, history))
@@ -237,14 +238,14 @@ def print_help():
         ./pairing.py
 
     OPTIONS:
-        -absent [...]
-        -alone [...]
-        -staying [...:...]
-        -lead [...]
-        -help
+        -a|-absent [...]
+        -s|--solo [...]
+        -r|--remaining [...:...]
+        -l|--lead [...]
+        --help
 
     EXAMPLE:
-        $ ./pairing.py -absent Wouter -lead Bert Michel -staying Gilles:Luc
+        $ ./pairing.py --absent Wouter --lead Bert Michel --remaining Gilles:Luc
     """
     print(help_str)
 
