@@ -20,11 +20,10 @@
 # TODO history.list should be alphabetical
 
 import sys
+import history_io
 from random import choice
 from collections import defaultdict
-from ast import literal_eval
 
-PAIR_CUMUL_SIGN = " - "
 PAIR_SPLIT_SIGN = ":"
 AFFIRMATIONS = ('y','yes')
 NEGATIONS = ('n','no')
@@ -46,7 +45,7 @@ def main():
             response = input("Is this pairing good? Please answer 'y[es]' or 'n[o]': ")
         good_pairing_found = True if response in AFFIRMATIONS else False
 
-    _increment_cumul_chosen_pairs_in_history(pairs)
+    history_io.increment_cumul_chosen_pairs(pairs)
 
 def _create_pairing(args):
     devs = [dev for dev in ALL_DEVS]
@@ -97,11 +96,23 @@ def _group_values_with_their_options(args):
 
 def _form_pairs(devs, pairs, leads):
     # TODO shouldn't need pairs.
-    history = _fetch_history()
+    history = history_io.fetch_history()
 
     _create_pairs_with_leads(devs, pairs, leads, history)
 
     _create_pairs_without_leads(devs, pairs, history)
+
+def _create_pair(dev_1, dev_2):
+    return tuple(sorted([dev_1, dev_2]))
+
+def _parse_pair(pair_str):
+    return tuple(sorted(pair_str.split(PAIR_SPLIT_SIGN)))
+    
+def _pair_str_repr(pair):
+    if len(pair) == 1:
+        return pair[0]
+    else:
+        return "{}{}{}".format(pair[0], PAIR_SPLIT_SIGN, pair[1])
 
 def _create_pairs_with_leads(devs, pairs, leads, history):
     while len(leads) > 0:
@@ -186,52 +197,6 @@ def _get_other(pair, dev):
     else:
         return pair[0]
 
-def _fetch_history():
-    try:
-        return _read_history()
-    except FileNotFoundError:
-        return _create_zero_history()
-
-def _read_history():
-    pair_histories = {}
-    reader = open("history.list","r")
-    history = reader.read()
-    for pair_history in history.split("\n"):
-        if pair_history:
-            pair_cumul = pair_history.split(PAIR_CUMUL_SIGN)
-            pair_histories[literal_eval(pair_cumul[0])] = int(pair_cumul[1])
-
-    return pair_histories
-
-def _create_zero_history():
-    pair_histories = {}
-    for i, dev_i in enumerate(ALL_DEVS):
-        for j in range(i+1,  len(ALL_DEVS)):
-            pair = _create_pair(ALL_DEVS[i], ALL_DEVS[j])
-            pair_histories[pair] = 0
-        pair_histories[tuple([dev_i])] = 0
-
-    _store_pair_histories(pair_histories)
-    return pair_histories
-
-def _store_pair_histories(pair_histories):
-    writer = open("history.list", "w")
-    for pair in pair_histories:
-        writer.write("{}{}{}\n".format(pair, PAIR_CUMUL_SIGN, pair_histories[pair]))
-    writer.close()
-
-def _parse_pair(pair_str):
-    return tuple(sorted(pair_str.split(PAIR_SPLIT_SIGN)))
-
-def _create_pair(dev_1, dev_2):
-    return tuple(sorted([dev_1, dev_2]))
-
-def _pair_str_repr(pair):
-    if len(pair) == 1:
-        return pair[0]
-    else:
-        return "{}{}{}".format(pair[0], PAIR_SPLIT_SIGN, pair[1])
-
 def print_help():
     help_str = """
     COMMAND:
@@ -248,13 +213,6 @@ def print_help():
         $ ./pairing.py --absent Wouter --lead Bert Michel --remaining Gilles:Luc
     """
     print(help_str)
-
-def _increment_cumul_chosen_pairs_in_history(pairs):
-    history = _fetch_history()
-    for pair in pairs:
-        history[pair] = history[pair] + 1
-
-    _store_pair_histories(history)
 
 if __name__ == '__main__':
     main()
