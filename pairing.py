@@ -17,7 +17,6 @@
 # If uneven, first deal with solo guy, then pairs
 
 import sys
-
 import bash_io
 import history_io
 import matchmaker
@@ -38,14 +37,19 @@ def main():
 
         pairs = matchmaker.form_pairs(history, devs, pairs, leads)
 
-        bash_io.pretty_print(pairs)
-        response = input("Is this pairing good? [Y/N]: ")
-        while response.lower() not in ACCEPTABLE_RESPONSES:
-            response = input(
-                "Is this pairing good? Please answer 'y[es]' or 'n[o]': ")
-        good_pairing_found = True if response in AFFIRMATIONS else False
+        good_pairing_found = ask_approval(pairs)
 
     history_io.increment_cumul_chosen_pairs(pairs)
+
+
+def ask_approval(pairs):
+    bash_io.pretty_print(pairs)
+
+    response = input("Is this pairing good? [Y/N]: ")
+    while response.lower() not in ACCEPTABLE_RESPONSES:
+        response = input(
+            "Is this pairing good? Please answer 'y[es]' or 'n[o]': ")
+    return True if response in AFFIRMATIONS else False
 
 
 if __name__ == '__main__':
